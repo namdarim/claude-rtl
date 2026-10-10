@@ -25,7 +25,7 @@ Use the plugin, unless you are on Linux and want every part of the app fixed. Th
 ### Requirements
 
 - The Claude desktop app, Code tab. Plugins belong to Claude Code, so the Chat tab is not reached.
-- Python 3. On Windows, install it from [python.org](https://www.python.org/downloads/) and tick "Add python.exe to PATH" in the installer. The `python3` that Windows offers from the Microsoft Store before Python is installed is not Python, and the plugin skips it. macOS and Linux usually have Python 3 already.
+- Python 3. On Windows, install it from [python.org](https://www.python.org/downloads/) and tick "Add python.exe to PATH" in the installer. The `python3` that Windows offers from the Microsoft Store before Python is installed is not Python, and the plugin skips it. If the Claude app was open while you installed Python, quit it completely, also from its icon next to the clock, and open it again, so that it finds the new Python. macOS and Linux usually have Python 3 already.
 - On Windows, [Git for Windows](https://git-scm.com/downloads/win). Claude Code runs a plugin's hooks with its Git Bash and downloads the plugin with git; without Git for Windows it runs hooks in PowerShell, where this hook cannot run.
 
 ### Install from the desktop app
@@ -47,7 +47,7 @@ Use the plugin, unless you are on Linux and want every part of the app fixed. Th
    }
    ```
 
-   You can also paste this into a Code session and ask Claude to add it to that file.
+   You can also paste this into a Code session and ask Claude to add it to that file. In Notepad on Windows, choose "All files" under "Save as type", or the file is saved as `settings.json.txt` and nothing happens.
 3. Start a new session in the Code tab. Claude Code downloads the plugin and loads it; it is then listed under **+** > **Plugins** next to the prompt box.
 
 `"autoUpdate": true` lets Claude Code fetch new versions of the plugin on its own after it starts; without it, you update by hand.

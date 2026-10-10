@@ -25,7 +25,7 @@
 ### پیش‌نیازها
 
 - اپ دسکتاپ Claude، تب Code. پلاگین مال Claude Code است، پس به تب Chat نمی‌رسد.
-- ‏Python 3. روی Windows آن را از [python.org](https://www.python.org/downloads/) نصب کنید و در نصب‌کننده گزینهٔ «Add python.exe to PATH» را تیک بزنید. `python3` ای که Windows پیش از نصب Python از Microsoft Store پیشنهاد می‌کند خود Python نیست و پلاگین از آن می‌گذرد. macOS و Linux معمولاً Python 3 را از قبل دارند.
+- ‏Python 3. روی Windows آن را از [python.org](https://www.python.org/downloads/) نصب کنید و در نصب‌کننده گزینهٔ «Add python.exe to PATH» را تیک بزنید. `python3` ای که Windows پیش از نصب Python از Microsoft Store پیشنهاد می‌کند خود Python نیست و پلاگین از آن می‌گذرد. اگر اپ Claude هنگام نصب Python باز بود، آن را کامل ببندید، از آیکونش کنار ساعت هم، و دوباره باز کنید تا Python ِ تازه را پیدا کند. macOS و Linux معمولاً Python 3 را از قبل دارند.
 - روی Windows، [Git for Windows](https://git-scm.com/downloads/win). ‏Claude Code hookهای پلاگین را با Git Bash ِ آن اجرا می‌کند و پلاگین را با git دانلود می‌کند؛ بی Git for Windows hookها را در PowerShell اجرا می‌کند و این hook آنجا اجرا نمی‌شود.
 
 ### نصب از اپ دسکتاپ
@@ -47,7 +47,7 @@
    }
    ```
 
-   می‌توانید همین را در یک نشست Code هم بچسبانید و از Claude بخواهید آن را به همان فایل اضافه کند.
+   می‌توانید همین را در یک نشست Code هم بچسبانید و از Claude بخواهید آن را به همان فایل اضافه کند. اگر با Notepad ِ Windows ذخیره می‌کنید، در «Save as type» گزینهٔ «All files» را بزنید، وگرنه فایل `settings.json.txt` ذخیره می‌شود و کاری نمی‌کند.
 3. در تب Code یک نشست تازه باز کنید. Claude Code پلاگین را دانلود و بار می‌کند، و بعد آن را زیر **+** > **Plugins** کنار جعبهٔ پیام می‌بینید.
 
 ‏`"autoUpdate": true` می‌گذارد Claude Code پس از هر بار شروع، نسخهٔ تازهٔ پلاگین را خودش بگیرد؛ بی آن، به‌روزرسانی با دست است.
