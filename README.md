@@ -18,7 +18,7 @@ The Claude desktop app gives each paragraph, list item, heading and table cell t
 | Install | Two entries in Claude Code's settings file, or two commands; no admin rights | `sudo`, and again after every app update |
 | Support | Uses Claude Code's plugin system | An unofficial change to the app, not supported by Anthropic |
 
-Use the plugin, unless you are on Linux and want every part of the app fixed. The Linux patch has its own page with its [conditions and limits](linux-patch/README.md).
+Use the plugin, unless you are on Linux and want every part of the app fixed. Do not use both: with the patch every text already gets its direction, and the plugin would only have Claude rewrite dialog and title texts for nothing. The Linux patch has its own page with its [conditions and limits](linux-patch/README.md).
 
 ## The rtl-display plugin
 
