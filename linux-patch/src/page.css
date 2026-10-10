@@ -1,0 +1,12 @@
+/* Right-to-left text the app lays out left to right, or gave a direction from its first letter
+   that page.js replaced. */
+[data-rtl-patch="rtl"],
+[data-rtl-patch="over"] {
+  text-align: start !important;
+}
+
+/* A value the app draws as code with bidi-override: let each line take its own direction. */
+[data-rtl-patch="plain"] {
+  unicode-bidi: plaintext !important;
+  text-align: start !important;
+}

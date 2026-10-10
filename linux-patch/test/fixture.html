@@ -1,0 +1,156 @@
+<!doctype html>
+<!-- The shapes the app's pages have, for test/test_browser.py. data-expect says what page.js must do
+     with each element: rtl (dir="rtl"), none (leave it), app (keep the app's dir), over (replace a
+     direction the app took from the first letter with dir="rtl"), plain (undo a bidi-override), auto
+     (a field gets dir="auto"). Any marked element without data-expect fails. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>desktop-patch fixture</title>
+<link rel="stylesheet" href="../src/page.css">
+<style>
+  body { font: 14px sans-serif; margin: 0 }
+  .layout { display: flex; height: 640px }
+  .sidebar { width: 240px; padding: 8px; border-right: 1px solid #ccc }
+  .row { display: flex; align-items: center; gap: 6px; padding: 4px; text-align: left }
+  .icon { width: 10px; height: 10px; background: #888; display: inline-block; flex: none }
+  .label { display: inline-block; white-space: nowrap; overflow: hidden }
+  .fade { display: block; flex: 1; min-width: 0; white-space: nowrap; overflow: hidden }
+  .relative { position: relative }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border-width: 0 }
+  .main { flex: 1; padding: 8px; overflow: auto }
+  .panel { width: 280px; border-left: 1px solid #ccc; padding: 8px }
+  .title-button { display: inline-flex; align-items: center; text-align: left; border: 1px solid #ccc; padding: 2px 6px }
+  .bubble { background: #eee; padding: 4px 10px; margin: 8px 0 }
+  pre { background: #222; color: #eee; padding: 6px }
+  .code-value { font-family: monospace; unicode-bidi: bidi-override }
+  .message { display: grid; grid-template-columns: 1fr; gap: 6px; margin: 8px 0 }
+</style>
+</head>
+<body>
+<div class="layout" data-expect="none">
+  <nav class="sidebar" data-expect="none">امروز
+    <div class="row" data-expect="none"><span class="icon"></span><span class="label" data-expect="rtl">همگام‌سازی تنظیمات سرور و Nginx</span></div>
+    <div class="row" data-expect="none"><span class="icon"></span><span class="label" data-expect="none">web-app</span></div>
+    <div class="row" data-expect="none"><span class="icon"></span><span class="label" data-expect="rtl">قابلیت mods جدید و RTL</span></div>
+    <!-- A side chat (a fork): the title carries a label only screen readers get, out of the flow -->
+    <div class="row" data-expect="none"><span class="icon"></span><span class="fade" data-expect="none"><span class="label" data-expect="rtl"><span class="relative" data-expect="none">btw: آیا google message اوپن سورس نیست؟<span class="sr-only" data-expect="none"> Forked from web-app</span></span></span></span></div>
+    <div class="row" data-expect="none"><span class="icon"></span><span class="fade" data-expect="none"><span class="label" data-expect="rtl"><span class="relative" data-expect="none">btw: Docker نصب شد<span class="sr-only" data-expect="none"> Forked from web-app</span></span></span></span></div>
+  </nav>
+  <main class="main" data-expect="none">
+    <div data-expect="none"><button class="title-button" data-expect="none"><span data-expect="rtl">قابلیت ماد و نمایش راست به چپ</span></button></div>
+    <div data-expect="none"><span class="title-button" data-expect="rtl">عنوانی که فقط متن است و mod دارد</span></div>
+    <div class="bubble" data-expect="none">
+      <p data-expect="rtl">قابلیت mods تازه اضافه شده؟</p>
+      <p data-expect="rtl">README را به‌روز کن و <code>git status</code> را ببین.</p>
+      <p data-expect="none">Please check the <b>deploy</b> logs.</p>
+    </div>
+    <div data-expect="none">
+      <p dir="rtl" data-expect="app">این بند را اپ خودش جهت داده است.</p>
+      <ul dir="ltr" data-expect="over"><li data-expect="none">Docker بی علامت</li></ul>
+      <pre data-expect="none"><code data-expect="none">sudo bash tools/install.sh
+[sudo] password for user: گذرواژه</code></pre>
+      <p data-expect="rtl">اسکریپت <code>install.sh</code> را اجرا کنید.</p>
+      <bdi data-expect="none">برچسبی که اپ در bdi گذاشته</bdi>
+    </div>
+    <!-- Messages: the app lays each one out as a grid of blocks and gives every block a dir from its
+         first letter. In a Persian message every block reads right to left, even one that is all
+         English or a bare name; in an English one each block decides for itself. -->
+    <div class="message message-fa" data-expect="none">
+      <p dir="rtl" data-expect="app">این پیام فارسی است و چند بلوک دارد که بیشترشان با حرف فارسی شروع می‌شوند.</p>
+      <p dir="ltr" data-expect="over">Markdown اول این بند آمده و بقیهٔ جمله فارسی است.</p>
+      <ul dir="ltr" data-expect="over"><li data-expect="none">CSS خالص جهت را از اولین حرف می‌گیرد</li><li data-expect="none">بند دوم فارسی است</li></ul>
+      <p dir="ltr" data-expect="over">Docker Compose و Redis</p>
+      <p dir="ltr" data-expect="over">This line is English inside a Persian message.</p>
+      <ul dir="ltr" data-expect="over"><li data-expect="none">web-app</li></ul>
+      <pre data-expect="none"><code data-expect="none">git status</code></pre>
+    </div>
+    <div class="message message-en" data-expect="none">
+      <p dir="ltr" data-expect="app">This message is written in English, as a reply to someone who asked in English, and it explains a change in a few sentences.</p>
+      <p dir="ltr" data-expect="app">Please read the «گزارش» file before the meeting, then tell me which of the three options you prefer and why you prefer it.</p>
+      <ul dir="ltr" data-expect="over"><li data-expect="none">Docker بی علامت و بی هیچ نشانه</li></ul>
+      <p dir="ltr" id="restore" data-expect="app">Docker اول آمده ولی این بند فارسی است.</p>
+      <p dir="ltr" id="rewrite" data-expect="over">Markdown اول آمده و بقیهٔ این بند فارسی است.</p>
+    </div>
+    <!-- Labels the app draws in bdi or with dir="auto", and a dir="ltr" it sets on purpose -->
+    <div data-expect="none"><span data-expect="none"><bdi data-expect="over">Docker برای نصب این بسته لازم است</bdi></span></div>
+    <div data-expect="none"><span dir="auto" data-expect="over">README را به‌روز کن و بعد ادامه بده</span></div>
+    <div dir="ltr" data-expect="app">این مقدار را اپ عمداً چپ‌به‌راست گذاشته است</div>
+    <div dir="ltr" class="code-value" data-expect="plain">گزارش هفتگی</div>
+    <textarea data-expect="auto"></textarea>
+    <div contenteditable="true" data-expect="none"><p data-expect="none">ویرایشگر پیام</p></div>
+  </main>
+  <aside class="panel" data-expect="none"><div id="host" data-expect="none"></div></aside>
+</div>
+<pre id="report" data-expect="none"></pre>
+
+<script src="../src/page.js"></script>
+<script>
+  // A mod's drawing: an open shadow root attached after page.js, with a flex Box of Text spans
+  setTimeout(() => {
+    const root = document.getElementById('host').attachShadow({ mode: 'open' })
+    root.innerHTML = '<div style="display:flex;flex-direction:column;gap:4px" data-expect="none">' +
+      '<span data-expect="rtl">این خط فارسی است و کلمهٔ mod وسطش آمده است.</span>' +
+      '<span data-expect="none">surface: desktop · placement: dock</span></div>'
+  }, 50)
+
+  // A mod drawn while its host is still off the page, which joins the page in a later task
+  setTimeout(() => {
+    const host = document.createElement('div')
+    host.setAttribute('data-expect', 'none')
+    host.attachShadow({ mode: 'open' }).innerHTML = '<div style="display:flex;flex-direction:column" data-expect="none">' +
+      '<span data-expect="rtl">پنلی که پیش از رسیدن به صفحه رسم شد.</span></div>'
+    setTimeout(() => document.querySelector('.panel').appendChild(host), 50)
+  }, 150)
+
+  // Text that arrives later, the way a streamed or re-rendered row does. Its direction must be set
+  // before the next task, so the browser never paints it the wrong way first.
+  let lateDir = null
+  setTimeout(() => {
+    const p = document.createElement('p')
+    p.setAttribute('data-expect', 'rtl')
+    p.textContent = 'پیامی که بعداً رسید با یک کلمهٔ English.'
+    document.querySelector('.bubble').appendChild(p)
+    setTimeout(() => { lateDir = p.getAttribute('dir') }, 0)
+  }, 100)
+
+  // The app re-renders the bidi-override value: it stays plain and keeps the app's dir="ltr"
+  setTimeout(() => { document.querySelector('.code-value').firstChild.nodeValue = 'گزارش ماهانه' }, 200)
+
+  // A block of Claude's message turns English, so it gets the app's dir="ltr" back; and the app
+  // writes its own dir again over a block that was corrected, which is corrected again
+  setTimeout(() => { document.getElementById('restore').firstChild.nodeValue = 'Docker is an English sentence now.' }, 250)
+  setTimeout(() => document.getElementById('rewrite').setAttribute('dir', 'ltr'), 300)
+
+  setTimeout(() => {
+    const results = []
+    const visit = (root, where) => {
+      for (const el of root.querySelectorAll('*')) {
+        const want = el.getAttribute('data-expect')
+        const mark = el.getAttribute('data-rtl-patch')
+        const label = `${where}${el.tagName.toLowerCase()} «${(el.textContent || '').trim().slice(0, 40)}»`
+        if (want === null) {
+          if (mark !== null) results.push({ el: label, want: 'unmarked', got: mark, ok: false })
+        } else {
+          const got = mark ?? (el.hasAttribute('dir') ? 'app' : 'none')
+          const ok = want === got && (!['rtl', 'over'].includes(want) || el.getAttribute('dir') === 'rtl')
+          results.push({ el: label, want, got, ok })
+        }
+        if (el.shadowRoot) visit(el.shadowRoot, 'shadow ')
+      }
+    }
+    visit(document, '')
+    results.push({ el: 'late paragraph, one task after it arrived', want: 'rtl', got: lateDir || 'none', ok: lateDir === 'rtl' })
+    const value = document.querySelector('.code-value')
+    if (value.getAttribute('dir') !== 'ltr') {
+      results.push({ el: 'bidi-override value after a re-render', want: 'dir ltr', got: `dir ${value.getAttribute('dir')}`, ok: false })
+    }
+    const restored = document.getElementById('restore')
+    if (restored.getAttribute('dir') !== 'ltr') {
+      results.push({ el: 'block that turned English', want: 'dir ltr', got: `dir ${restored.getAttribute('dir')}`, ok: false })
+    }
+    document.getElementById('report').textContent = JSON.stringify(results)
+  }, 800)
+</script>
+</body>
+</html>

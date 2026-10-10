@@ -1,0 +1,188 @@
+<!doctype html>
+<!-- A page shaped like the app's, for test/bench.mjs: a sidebar of session rows, a transcript of
+     user bubbles, Claude messages whose blocks the app gave a dir, tool rows and text the app draws
+     without dir, and a terminal. bench.mjs loads it with ?v=<variant> to pick page-<variant>.js. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>desktop-patch bench</title>
+<link rel="stylesheet" href="page.css">
+<style>
+  body { font: 14px sans-serif; margin: 0 }
+  .layout { display: flex; height: 100vh }
+  .sidebar { width: 260px; overflow: auto; flex: none }
+  .row { display: flex; align-items: center; gap: 6px; padding: 4px }
+  .icon { width: 10px; height: 10px; background: #888; flex: none }
+  .label { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+  .main { flex: 1; overflow: auto; padding: 8px }
+  .msg { margin: 8px 0 }
+  .bubble { background: #eee; padding: 4px 10px; border-radius: 8px }
+  .tool { display: flex; gap: 6px; color: #666 }
+  pre { background: #222; color: #eee; padding: 6px }
+  .term { width: 300px; overflow: hidden; font-family: monospace; white-space: pre; flex: none }
+</style>
+</head>
+<body>
+<div class="layout"><nav class="sidebar" id="sidebar"></nav><main class="main" id="main"></main><aside class="term" id="term"></aside></div>
+<script>
+  // Every observer callback and timer on this page belongs to the patch, since the benchmark keeps
+  // its own setTimeout: __cost is the time the patch's code ran, style reads included, and
+  // __timerCost the part of it that ran later on a timer
+  const realSetTimeout = window.setTimeout.bind(window)
+  window.__cost = 0
+  window.__timerCost = 0
+  const RealMO = window.MutationObserver
+  window.MutationObserver = class extends RealMO {
+    constructor(cb) {
+      super((list, obs) => { const t = performance.now(); try { cb(list, obs) } finally { window.__cost += performance.now() - t } })
+    }
+  }
+  window.setTimeout = function (fn, ms, ...args) {
+    return realSetTimeout(() => {
+      const t = performance.now()
+      try { fn(...args) } finally { const d = performance.now() - t; window.__cost += d; window.__timerCost += d }
+    }, ms)
+  }
+  document.write(`<script src="page-${new URLSearchParams(location.search).get('v')}.js"><\/script>`)
+</script>
+<script>
+  const FA = ['این یک بند فارسی است که دربارهٔ تنظیمات روتر و کار با Docker توضیح می‌دهد.',
+    'پچ اصلاح‌شده نصب شد و اپ بدون خطا دوباره بالا آمد.', 'برای ادامه، فرمان نصب را دوباره اجرا کنید و نتیجه را ببینید.']
+  const MIX = ['Markdown اول این بند آمده و بقیهٔ جمله فارسی است و ادامه دارد.', 'README را به‌روز کن و git status را ببین.']
+  const EN = ['Please check the deploy logs and run the tests again before merging.', 'The build finished in 42 seconds with no warnings.']
+  const TITLES = ['همگام‌سازی تنظیمات سرور و Nginx', 'web-app', 'قابلیت ماد و نمایش راست به چپ', 'Fix the login bug',
+    'اپ اندروید مدیریت پیام', 'ادامه کار آراز', 'Router panel']
+  const CODE = Array.from({ length: 15 }, (_, k) => `line ${k}: sudo bash tools/install.sh # نصب`).join('\n')
+  const pick = (list, i) => list[i % list.length]
+
+  function message(i) {
+    const msg = document.createElement('div')
+    msg.className = 'msg'
+    const kind = i % 4
+    if (kind === 0) msg.innerHTML = `<div class="bubble"><p>${pick(FA, i)}</p></div>`
+    else if (kind === 1) msg.innerHTML = `<p dir="rtl">${pick(FA, i)} <code>install.sh</code> ${pick(FA, i + 1)}</p>` +
+      `<ul dir="rtl"><li>${pick(FA, i)}</li><li>${pick(MIX, i)}</li><li>${pick(FA, i + 2)}</li></ul>` +
+      `<p dir="ltr">${pick(MIX, i)}</p><p dir="ltr">${pick(EN, i)}</p><pre><code>${CODE}</code></pre>`
+    else if (kind === 2) msg.innerHTML = '<div class="tool"><span>Ran 5 commands</span><span>›</span></div>' +
+      '<div class="tool"><span>Edited 3 files</span><span>+160 -12</span></div>'
+    else msg.innerHTML = `<p>${pick(MIX, i)}</p><p>${pick(EN, i)}</p>`
+    return msg
+  }
+  function transcript(n, offset) {
+    const f = document.createDocumentFragment()
+    for (let i = 0; i < n; i++) f.appendChild(message(i + offset))
+    return f
+  }
+  function rows(n, offset) {
+    const f = document.createDocumentFragment()
+    for (let i = 0; i < n; i++) {
+      const row = document.createElement('div')
+      row.className = 'row'
+      row.innerHTML = `<span class="icon"></span><span class="label">${pick(TITLES, i + offset)}</span>`
+      f.appendChild(row)
+    }
+    return f
+  }
+  function terminalLines(term, k) {
+    for (let j = 0; j < 20; j++) {
+      const line = document.createElement('div')
+      line.innerHTML = `<span>user@desktop</span>:<span>~/src</span>$ <span>ls -la ${k}-${j}</span>`
+      term.appendChild(line)
+    }
+  }
+  const nextTask = () => new Promise(r => realSetTimeout(r, 0))
+  const quiet = () => new Promise(r => realSetTimeout(r, 80))
+  const persianLabels = () => [...document.querySelectorAll('#sidebar .label')].filter(l => /[؀-ۿ]/.test(l.textContent))
+  const $ = id => document.getElementById(id)
+
+  // The patch's own time over a piece of work, and what the work returns
+  async function own(work) {
+    await quiet()
+    const c0 = window.__cost
+    const extra = await work()
+    await quiet()
+    return { ms: +(window.__cost - c0).toFixed(1), ...extra }
+  }
+
+  // The patch's own time, and how often text was still in the wrong direction one task after it
+  // arrived, that is after the browser had a chance to paint it
+  window.runOwn = async () => {
+    const r = {}
+    r.load = await own(async () => { $('main').appendChild(transcript(160, 0)); $('sidebar').appendChild(rows(80, 0)) })
+    r.switch5 = await own(async () => {
+      for (let k = 1; k <= 5; k++) { $('main').replaceChildren(transcript(160, k * 7)); await nextTask() }
+    })
+    r.streamClaude300 = await own(async () => {
+      const p = document.createElement('p'); p.setAttribute('dir', 'rtl')
+      const t = p.appendChild(document.createTextNode('شروع')); $('main').appendChild(p)
+      for (let k = 0; k < 300; k++) { t.appendData(' کلمهٔ تازه Docker'); await nextTask() }
+    })
+    r.streamPlain300 = await own(async () => {
+      const p = document.createElement('p')
+      const t = p.appendChild(document.createTextNode('')); $('main').appendChild(p)
+      let wrong = 0
+      for (let k = 0; k < 300; k++) { t.appendData(' کلمهٔ تازه'); await nextTask(); if (p.getAttribute('dir') !== 'rtl') wrong++ }
+      return { wrong, of: 300 }
+    })
+    r.rerender100 = await own(async () => {
+      let wrong = 0, of = 0
+      for (let k = 0; k < 100; k++) {
+        $('sidebar').replaceChildren(rows(80, k))
+        await nextTask()
+        const labels = persianLabels()
+        of += labels.length
+        wrong += labels.filter(l => l.getAttribute('dir') !== 'rtl').length
+      }
+      return { wrong, of }
+    })
+    r.terminal100 = await own(async () => { for (let k = 0; k < 100; k++) { terminalLines($('term'), k); await nextTask() } })
+    r.composer300 = await own(async () => {
+      const ed = document.createElement('div'); ed.className = 'ProseMirror'; ed.contentEditable = 'true'
+      const p = ed.appendChild(document.createElement('p')); const t = p.appendChild(document.createTextNode(''))
+      $('main').appendChild(ed)
+      for (let k = 0; k < 300; k++) { t.appendData('س'); await nextTask() }
+    })
+    return r
+  }
+
+  // Total main-thread work for each change: the change, the patch's observer callback after it, and
+  // the style and layout the browser then needs (forced here with offsetHeight), plus whatever the
+  // patch does later on a timer and the layout that causes. The difference from the page without
+  // the patch is what the patch costs. Changes come 40 ms apart, as separate updates do in the app.
+  async function total(steps, change) {
+    await quiet()
+    document.body.offsetHeight
+    const timer0 = window.__timerCost
+    let sum = 0
+    for (let k = 0; k < steps; k++) {
+      const t0 = performance.now()
+      change(k)
+      await Promise.resolve()
+      document.body.offsetHeight
+      sum += performance.now() - t0
+      await new Promise(r => realSetTimeout(r, 40))
+    }
+    await quiet()
+    const t0 = performance.now()
+    document.body.offsetHeight
+    sum += performance.now() - t0
+    return { ms: +(sum + window.__timerCost - timer0).toFixed(1) }
+  }
+
+  window.runTotal = async () => {
+    $('main').appendChild(transcript(40, 0)); $('sidebar').appendChild(rows(80, 0))
+    const r = {}
+    r.switch5 = await total(5, k => $('main').replaceChildren(transcript(160, k * 7)))
+    r.rerender50 = await total(50, k => $('sidebar').replaceChildren(rows(80, k)))
+    const p = $('main').appendChild(document.createElement('p'))
+    const t = p.appendChild(document.createTextNode(''))
+    r.streamPlain100 = await total(100, () => t.appendData(' کلمهٔ تازه'))
+    const q = $('main').appendChild(document.createElement('p')); q.setAttribute('dir', 'rtl')
+    const u = q.appendChild(document.createTextNode('شروع'))
+    r.streamClaude100 = await total(100, () => u.appendData(' کلمهٔ تازه Docker'))
+    r.terminal50 = await total(50, k => terminalLines($('term'), k))
+    return r
+  }
+</script>
+</body>
+</html>

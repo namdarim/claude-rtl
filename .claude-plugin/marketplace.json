@@ -1,0 +1,23 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-rtl",
+  "description": "Right-to-left text in the Claude desktop app",
+  "owner": {
+    "name": "namdarim",
+    "url": "https://github.com/namdarim"
+  },
+  "plugins": [
+    {
+      "name": "rtl-display",
+      "description": "Shows Claude's Persian (and other right-to-left) replies right to left in the Claude desktop app, also where a line starts with an English word, a path or code",
+      "version": "1.0.0",
+      "author": {
+        "name": "namdarim",
+        "url": "https://github.com/namdarim"
+      },
+      "source": "./plugins/rtl-display",
+      "category": "productivity",
+      "homepage": "https://github.com/namdarim/claude-rtl"
+    }
+  ]
+}

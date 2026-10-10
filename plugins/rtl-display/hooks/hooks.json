@@ -1,0 +1,16 @@
+{
+  "description": "Adds U+200F to the blocks of Claude's replies that should read right to left but start with a Latin letter, before the desktop app shows them",
+  "hooks": {
+    "MessageDisplay": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/run.sh\" \"${CLAUDE_PLUGIN_ROOT}/hooks/rtl_display.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
