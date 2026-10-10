@@ -281,6 +281,20 @@ class TestPlain(unittest.TestCase):
         self.assertEqual(rm.mark_plain(text), text)
 
 
+class TestWidgets(unittest.TestCase):
+    def test_issues(self):
+        self.assertEqual(rm.widget_issues("کدام شاخه را merge کنم؟"), [rm.widget_issues("کدام شاخه را merge کنم؟")[0]])
+        self.assertIn("mixes", rm.widget_issues("کدام شاخه را merge کنم؟")[0])
+        self.assertEqual(rm.widget_issues("کدام شاخه را ادغام کنم؟\ngit merge main"), [])
+        self.assertIn("bidi mark", rm.widget_issues(f"{R}گزینهٔ اول")[0])
+        self.assertIn("end with", rm.widget_issues("گزینهٔ اول.")[0])
+        self.assertIn("start with", rm.widget_issues("«گزینه» اول")[0])
+        self.assertEqual(rm.widget_issues("نسخهٔ ۲"), [])
+        self.assertEqual(rm.widget_issues("Fix stale README badge", single_line=True), [])
+        self.assertIn("mixes", rm.widget_issues("پیشنهادی\nRecommended", single_line=True)[0])
+        self.assertEqual(rm.widget_issues("می‌خواهم ادامه بدهم"), [])  # ZWNJ is not a bidi mark
+
+
 class TestHook(unittest.TestCase):
     """The hook as hooks.json runs it: bash run.sh rtl_display.py, with the event on stdin."""
 
@@ -380,6 +394,34 @@ class TestHook(unittest.TestCase):
         script = "C:" + os.path.join(HOOKS, "rtl_display.py")
         self.assertEqual(calls[:3], [f"python {script}", f"py -3 {script}", f"python3 {script}"])
 
+    def pre_tool_use(self, tool, tool_input):
+        out = self.run_hook({"session_id": "s1", "hook_event_name": "PreToolUse", "tool_name": tool,
+                             "tool_input": tool_input})
+        return json.loads(out)["hookSpecificOutput"] if out.strip() else None
+
+    def test_pre_tool_use(self):
+        bad = {"questions": [{"question": "کدام شاخه را merge کنم؟", "header": "شاخه", "multiSelect": False,
+                              "options": [{"label": "اصلی", "description": "main"},
+                                          {"label": f"{R}فرعی", "description": "x"}]}]}
+        spec = self.pre_tool_use("AskUserQuestion", bad)
+        self.assertEqual(spec["permissionDecision"], "deny")
+        self.assertIn("questions[0].question", spec["permissionDecisionReason"])
+        self.assertIn("questions[0].options[1].label", spec["permissionDecisionReason"])
+        good = {"questions": [{"question": "کدام شاخه را ادغام کنم؟\nmain", "header": "شاخه", "multiSelect": False,
+                               "options": [{"label": "اصلی", "description": "شاخهٔ اصلی"},
+                                           {"label": "فرعی", "description": "x"}]}]}
+        self.assertIsNone(self.pre_tool_use("AskUserQuestion", good))
+        english = {"questions": [{"question": "Which branch should I merge?", "header": "Branch",
+                                  "options": [{"label": "main", "description": "The default branch"}]}]}
+        self.assertIsNone(self.pre_tool_use("AskUserQuestion", english))
+        chip = {"title": "رفع نشان README", "tldr": "x", "prompt": "Docker متن"}
+        self.assertIn("title", self.pre_tool_use("mcp__ccd_session__spawn_task", chip)["permissionDecisionReason"])
+        self.assertIsNone(self.pre_tool_use("mcp__ccd_session__spawn_task", {**chip, "title": "رفع نشان راهنما"}))
+        self.assertIn("name", self.pre_tool_use("mcp__ccd_sidebar__rename_section",
+                                                {"section_id": "s", "name": "کارهای Docker"})["permissionDecisionReason"])
+        self.assertIsNone(self.pre_tool_use("Bash", {"command": "echo «متن فارسی Docker»"}))
+        self.assertIsNone(self.pre_tool_use("AskUserQuestion", {"questions": "not a list"}))
+
     def test_manifests(self):
         with open(os.path.join(ROOT, ".claude-plugin", "marketplace.json")) as f:
             market = json.load(f)
@@ -390,10 +432,15 @@ class TestHook(unittest.TestCase):
         entry = market["plugins"][0]
         self.assertEqual((entry["name"], entry["version"]), (plugin["name"], plugin["version"]))
         self.assertTrue(os.path.isdir(os.path.join(ROOT, entry["source"])))
-        command = hooks["hooks"]["MessageDisplay"][0]["hooks"][0]["command"]
-        for name in ("run.sh", "rtl_display.py"):
-            self.assertIn(f'"${{CLAUDE_PLUGIN_ROOT}}/hooks/{name}"', command)
-            self.assertTrue(os.path.exists(os.path.join(HOOKS, name)))
+        for event in ("MessageDisplay", "PreToolUse"):
+            command = hooks["hooks"][event][0]["hooks"][0]["command"]
+            for name in ("run.sh", "rtl_display.py"):
+                self.assertIn(f'"${{CLAUDE_PLUGIN_ROOT}}/hooks/{name}"', command)
+                self.assertTrue(os.path.exists(os.path.join(HOOKS, name)))
+        # the PreToolUse matcher names exactly the tools whose text the hook checks
+        import rtl_display
+        matcher = hooks["hooks"]["PreToolUse"][0]["matcher"]
+        self.assertEqual(set(matcher.split("|")), {"AskUserQuestion", *rtl_display.WIDGET_FIELDS})
 
 
 if __name__ == "__main__":

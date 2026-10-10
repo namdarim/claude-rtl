@@ -1,8 +1,20 @@
 {
-  "description": "Adds U+200F to the blocks of Claude's replies that should read right to left but start with a Latin letter, before the desktop app shows them",
+  "description": "Adds U+200F to the blocks of Claude's replies that should read right to left but start with a Latin letter, before the desktop app shows them, and has Claude rewrite text for the app's question dialog, titles and chips that would not read right there",
   "hooks": {
     "MessageDisplay": [
       {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/run.sh\" \"${CLAUDE_PLUGIN_ROOT}/hooks/rtl_display.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "AskUserQuestion|mcp__ccd_session__spawn_task|mcp__ccd_session__start_session|mcp__ccd_session__hand_off_to_session|mcp__ccd_session__mark_chapter|mcp__ccd_session_mgmt__set_session_title|mcp__ccd_sidebar__create_group|mcp__ccd_sidebar__rename_group|mcp__ccd_sidebar__create_section|mcp__ccd_sidebar__rename_section|PushNotification",
         "hooks": [
           {
             "type": "command",

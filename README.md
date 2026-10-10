@@ -13,7 +13,7 @@ The Claude desktop app gives each paragraph, list item, heading and table cell t
 | | rtl-display plugin | Linux patch |
 | --- | --- | --- |
 | Systems | Windows, macOS and Linux | Linux, with the official `claude-desktop` package only |
-| What it fixes | Claude's replies in the Code tab | All text in the app window: Claude's replies, your own messages, session titles, the question dialog, task lists |
+| What it fixes | Claude's replies in the Code tab, and the text Claude writes for the question dialog, titles and chips | All text in the app window: Claude's replies, your own messages, session titles, the question dialog, task lists |
 | How | A Claude Code plugin: a `MessageDisplay` hook adds an invisible mark where a paragraph needs it | Changes the app's installed files, so that each of its pages gets a small script |
 | Install | Two entries in Claude Code's settings file, or two commands; no admin rights | `sudo`, and again after every app update |
 | Support | Uses Claude Code's plugin system | An unofficial change to the app, not supported by Anthropic |
@@ -77,11 +77,13 @@ In a Claude Code session in the terminal, the same is `/plugin marketplace add n
 - Only what is shown changes. The transcript, and what Claude reads, keep the reply as written.
 - It does not stand in the way. If Python is missing or anything fails, the reply is shown as written.
 - It is quick: the app waits for the hook before it shows a reply, and on Linux a reply of 5,000 characters takes about 0.1 s, nearly all of it Python starting.
-- It reads only the reply it is given and sends nothing anywhere.
+- The question dialog of AskUserQuestion, and the titles, chips and notifications that Claude sets through the desktop app's own tools, get no direction from the app, and it shows the mark there as `�`. So for these the plugin works the other way: when Claude writes such a text in a form that comes out scrambled, a `PreToolUse` hook turns the call down and tells Claude why, and Claude writes it again: each line all Persian or all Latin, starting and ending with a Persian letter. A Latin term then goes in Persian script or on a line of its own.
+- It reads only the text it is given and sends nothing anywhere.
 
 ### Limits
 
-- Only Claude's replies. No hook reaches your own messages, session titles, the sidebar, the question dialog or the rest of the app; on Linux the patch fixes those.
+- No hook reaches your own messages or the rest of the app; on Linux the patch fixes those.
+- The question dialog, titles and chips read in the right order, but stay aligned to the left, and Claude spends one more call whenever it has to rewrite one.
 - Marks are added as a reply arrives. When the app later loads a session from its transcript, after a restart or when you reopen the session, the earlier replies are shown as written, without the marks.
 - Text that Claude Code records as thinking, such as some of what Claude writes between tool calls, does not reach the hook.
 - In a terminal, a reply that arrives in more than one piece is shown as written, because one piece alone does not tell whether it starts inside a code block. Most terminals do not lay out right-to-left text anyway.
@@ -95,7 +97,7 @@ In a Claude Code session in the terminal, the same is `/plugin marketplace add n
 
 ### Status
 
-Tested on Linux: the offline tests, and a real Claude Code 2.1.294 session in SDK mode, the mode the desktop app runs Claude Code in, where the hook ran once for each reply and the reply came out with the marks. Not yet tried on Windows or macOS. If it does not work there, please open an issue.
+Tested on Linux: the offline tests, and a real Claude Code 2.1.294 session in SDK mode, the mode the desktop app runs Claude Code in, where the hook ran once for each reply and the reply came out with the marks, and where a tool call with mixed Persian and Latin text was turned down and Claude wrote it again in Persian. Not yet tried on Windows or macOS. If it does not work there, please open an issue.
 
 ### Tests
 

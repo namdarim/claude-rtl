@@ -13,8 +13,11 @@ own words are mostly Persian, so that an English sentence quoting a Persian word
 
 The rtl-display plugin uses mark_markdown() on each reply before Claude's desktop app shows it; the
 app gives each block the direction of its first strong letter and counts U+200F as right to left.
-lint_markdown() reports the blocks of a Markdown document that lack a mark, and mark_plain() marks
-plain text, such as a chat message, where every line takes its own direction.
+widget_issues() lists what makes a text unreadable in a widget of the app that gives text no direction,
+such as the question dialog of AskUserQuestion, where a mark shows as �; the plugin's PreToolUse hook
+hands its findings to Claude. lint_markdown() reports the blocks of a Markdown document that lack a
+mark, and mark_plain() marks plain text, such as a chat message, where every line takes its own
+direction.
 """
 from __future__ import annotations
 
@@ -580,3 +583,27 @@ def _plain_first(s: str) -> str | None:
         if d:
             return d
     return None
+
+
+# ---------------------------------------------------------------- left-to-right widgets
+def widget_issues(text: str, single_line: bool = False) -> list[str]:
+    """What breaks the rule in text that a left-to-right widget shows (AskUserQuestion, chips, titles,
+    notifications): a bidi mark (shown as �), a line with both Persian and Latin letters, or a Persian
+    line that does not start with a Persian letter and end with a Persian letter, a digit or ؟. A
+    single-line field (a label, a header, a title) is checked as one line."""
+    issues = []
+    if any(ch in BIDI_MARKS for ch in text):
+        issues.append("it contains a bidi mark such as U+200F, which this widget shows as �: remove it")
+        text = "".join(ch for ch in text if ch not in BIDI_MARKS)
+    for line in [" ".join(text.split("\n"))] if single_line else text.split("\n"):
+        s = line.strip()
+        dirs = {letter_dir(ch) for ch in s}
+        if "R" in dirs and "L" in dirs:
+            issues.append(f"«{s}» mixes Persian and Latin letters: write the term in Persian script, or put "
+                          "the Latin text on a line of its own")
+        elif "R" in dirs:
+            if letter_dir(s[0]) != "R":
+                issues.append(f"«{s}» must start with a Persian letter")
+            if not (letter_dir(s[-1]) == "R" or s[-1].isdigit() or s[-1] == "؟"):
+                issues.append(f"«{s}» must end with a Persian letter, a digit or ؟")
+    return issues

@@ -1,6 +1,6 @@
 {
   "name": "rtl-display",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Shows Claude's Persian (and other right-to-left) replies right to left in the Claude desktop app, also where a line starts with an English word, a path or code",
   "author": {
     "name": "namdarim",
