@@ -99,15 +99,21 @@ def patch(src, dst, src_dir):
     payload = struct.pack('<I', len(text)) + text + b'\0' * (-len(text) % 4)
     header_pickle = struct.pack('<I', len(payload)) + payload
     tmp = dst + '.tmp'
-    with open(src, 'rb') as fin, open(tmp, 'wb') as out:
-        out.write(struct.pack('<II', 4, len(header_pickle)) + header_pickle)
-        fin.seek(base)
-        while chunk := fin.read(BLOCK):
-            out.write(chunk)
-        for data in new_files.values():
-            out.write(data)
-    verify(src, tmp, new_files)
-    os.replace(tmp, dst)
+    try:
+        with open(src, 'rb') as fin, open(tmp, 'wb') as out:
+            out.write(struct.pack('<II', 4, len(header_pickle)) + header_pickle)
+            fin.seek(base)
+            while chunk := fin.read(BLOCK):
+                out.write(chunk)
+            for data in new_files.values():
+                out.write(data)
+        verify(src, tmp, new_files)
+        os.replace(tmp, dst)
+    except BaseException:
+        # A failed run leaves nothing next to the installed app.asar
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+        raise
 
 
 def verify(src, dst, new_files):

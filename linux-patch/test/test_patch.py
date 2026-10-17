@@ -54,6 +54,22 @@ def main():
         raise AssertionError('patching a patched archive must fail')
     except ValueError:
         pass
+
+    # A patch that fails after writing leaves nothing behind, not even its temporary file: the apt hook
+    # runs this unattended next to the installed app.asar
+    failed = os.path.join(build, 'failed.asar')
+
+    def broken_verify(*_):
+        raise ValueError('simulated mismatch')
+    real_verify, pa.verify = pa.verify, broken_verify
+    try:
+        pa.patch(original_asar(), failed, os.path.join(ROOT, 'src'))
+        raise AssertionError('a failed check must fail the patch')
+    except ValueError:
+        pass
+    finally:
+        pa.verify = real_verify
+    assert not os.path.exists(failed) and not os.path.exists(failed + '.tmp'), 'a failed patch left files'
     print('ok')
 
 

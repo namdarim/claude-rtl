@@ -15,7 +15,7 @@ The Claude desktop app gives each paragraph, list item, heading and table cell t
 | Systems | Windows, macOS and Linux | Linux, with the official `claude-desktop` package only |
 | What it fixes | Claude's replies in the Code tab, and the text Claude writes for the question dialog, titles and chips | All text in the app window: Claude's replies, your own messages, session titles, the question dialog, task lists |
 | How | A Claude Code plugin: a `MessageDisplay` hook adds an invisible mark where a paragraph needs it | Changes the app's installed files, so that each of its pages gets a small script |
-| Install | Two entries in Claude Code's settings file, or two commands; no admin rights | `sudo`, and again after every app update |
+| Install | Two entries in Claude Code's settings file, or two commands; no admin rights | `sudo`, and again after every app update unless you add its apt hook |
 | Support | Uses Claude Code's plugin system | An unofficial change to the app, not supported by Anthropic |
 
 Use the plugin, unless you are on Linux and want every part of the app fixed. Do not use both: with the patch every text already gets its direction, and the plugin would only have Claude rewrite dialog and title texts for nothing. The Linux patch has its own page with its [conditions and limits](linux-patch/README.md).
