@@ -18,7 +18,7 @@ A patch for the official Claude desktop app on Linux that gives right-to-left te
 ## What it changes
 
 - `tools/patch_asar.py` adds three files next to the app's main entry in `/usr/lib/claude-desktop/resources/app.asar` and points `main` in its `package.json` to `rtl-patch-loader.js`. Every other file stays byte for byte at the same offset, and the result is checked against the original before it replaces it.
-- `src/loader.js` runs in the app's main process. On `dom-ready` of each page of the app itself (`https://claude.ai` and `app://localhost`) it injects `page.css` and `page.js`, then starts the app's own entry. Sites in the built-in browser, artifacts and previews get nothing.
+- `src/loader.js` runs in the app's main process. On `dom-ready` of each page of the app itself (`https://claude.ai` and `app://localhost`) it injects `page.css` and `page.js`. Before it starts the app's own entry, it runs any add-on the build packed from `src/addons/` (this repository has none), and logs and skips one that fails. Sites in the built-in browser, artifacts and previews get nothing.
 - `src/page.js` runs inside the app's pages, which are signed in to your account and can do whatever the app can. So it only reads text and sets the attributes `dir`, `data-rtl-patch` and `data-rtl-patch-app`: no network requests, no storage, no messages to the app or anywhere else. It is about 400 lines; read it before you install.
 - No port or channel is opened. Changing `/usr/lib` already needs root.
 - With the optional apt hook (see [Install](#install)), it also adds `/etc/apt/apt.conf.d/99claude-desktop-patch` and a root-owned copy of the scripts in `/usr/local/lib/claude-desktop-patch`.

@@ -6,9 +6,10 @@
 
 The patch adds three files next to the app's main entry (rtl-patch-loader.js, rtl-patch-page.js,
 rtl-patch-page.css) and a new package.json whose "main" is the loader and whose "rtlPatch" records
-the original main. Every other file keeps its bytes and its offset: the new files go after the old
-data, and only the header grows. The result is read back and compared with the source before this
-exits 0. Standard library only.
+the original main. Each SRC_DIR/addons/<name>.js, if there are any, is added as
+rtl-patch-addon-<name>.js, which the loader runs; the public patch has none. Every other file keeps
+its bytes and its offset: the new files go after the old data, and only the header grows. The result
+is read back and compared with the source before this exits 0. Standard library only.
 """
 import hashlib
 import json
@@ -19,6 +20,7 @@ import sys
 PATCH_VERSION = 1
 BLOCK = 4 * 1024 * 1024
 LOADER, PAGE_JS, PAGE_CSS = 'rtl-patch-loader.js', 'rtl-patch-page.js', 'rtl-patch-page.css'
+ADDON_PREFIX = 'rtl-patch-addon-'  # src/loader.js runs every file with this prefix
 
 
 def read_header(path):
@@ -87,6 +89,10 @@ def patch(src, dst, src_dir):
         f'{folder}/{PAGE_JS}': open(os.path.join(src_dir, 'page.js'), 'rb').read(),
         f'{folder}/{PAGE_CSS}': open(os.path.join(src_dir, 'page.css'), 'rb').read(),
     }
+    addons = os.path.join(src_dir, 'addons')
+    for name in sorted(os.listdir(addons)) if os.path.isdir(addons) else []:
+        if name.endswith('.js'):
+            new_files[f'{folder}/{ADDON_PREFIX}{name}'] = open(os.path.join(addons, name), 'rb').read()
 
     data_size = os.path.getsize(src) - base
     cursor = data_size

@@ -1,11 +1,12 @@
-// The patched app's main entry: injects page.js and page.css into the app's own pages, then starts
-// the app's original main entry. tools/patch_asar.py fills in ORIGINAL_MAIN.
+// The patched app's main entry: injects page.js and page.css into the app's own pages, runs the
+// build's add-ons, then starts the app's original main entry. tools/patch_asar.py fills in ORIGINAL_MAIN.
 'use strict'
 const { app } = require('electron')
 const fs = require('fs')
 const path = require('path')
 
 const ORIGINAL_MAIN = '__ORIGINAL_MAIN__'
+const ADDON_PREFIX = 'rtl-patch-addon-'
 const PAGE_JS = fs.readFileSync(path.join(__dirname, 'rtl-patch-page.js'), 'utf8')
 const PAGE_CSS = fs.readFileSync(path.join(__dirname, 'rtl-patch-page.css'), 'utf8')
 
@@ -29,5 +30,16 @@ app.on('web-contents-created', (_event, contents) => {
     contents.executeJavaScript(PAGE_JS).catch(() => {})
   })
 })
+
+// Add-ons: extra modules for the app's main process that a build adds from src/addons/ (the public
+// patch has none). One that fails is logged and skipped, so it never keeps the app from starting.
+for (const name of fs.readdirSync(__dirname).sort()) {
+  if (!name.startsWith(ADDON_PREFIX) || !name.endsWith('.js')) continue
+  try {
+    require(path.join(__dirname, name))
+  } catch (err) {
+    console.error(`rtl-patch: add-on ${name} failed:`, err)
+  }
+}
 
 require(ORIGINAL_MAIN)
